@@ -2,12 +2,16 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\ClaimController;
+use App\Models\Blog;
 
 Route::get('/', function () {
-    return view('index');
+    $blogs = Blog::where('status', true)->latest()->get();
+
+    return view('index', compact('blogs'));
 })->name('home');
 
 Route::get('/about', function () {

@@ -7,28 +7,28 @@ use Illuminate\Http\Request;
 
 class BlogController extends Controller
 {
-    public function index(Request $request)
+    public function __construct()
     {
-    
-        $search = $request->input('search');
+        $this->middleware('auth')->only(['manage', 'create', 'store', 'edit', 'update', 'delete', 'changeStatus']);
+    }
 
-      
-        $blogs = Blog::latest()
-            ->when($search, function ($query, $search) {
-                return $query->where(function ($q) use ($search) {
-                    $q->where('title', 'like', "%{$search}%")
-                      ->orWhere('content', 'like', "%{$search}%");
-                });
-            })
-            ->paginate(10)
-            ->withQueryString();
-
+    // หน้า public — เฉพาะบทความที่เผยแพร่แล้ว
+    public function index()
+    {
+        $blogs = Blog::where('status', true)->latest()->paginate(10);
         return view('blog', compact('blogs'));
+    }
+
+    // หน้าจัดการ (ต้อง login) — ทุกสถานะ
+    public function manage()
+    {
+        $blogs = Blog::latest()->paginate(10);
+        return view('blog2', compact('blogs'));
     }
 
     public function create()
     {
-        return view('from');
+        return view('form');
     }
 
     public function store(Request $request)
@@ -45,14 +45,39 @@ class BlogController extends Controller
         Blog::create([
             'title'   => $validated['title'],
             'content' => $validated['content'],
-            'status'  => 'draft',
+            'status'  => false,
         ]);
 
-        return redirect()->route('from')->with('success', 'บันทึกบทความเรียบร้อยแล้ว');
+        return redirect()->route('author.blog.manage')->with('success', 'บันทึกบทความเรียบร้อยแล้ว');
     }
 
-    // ฟังก์ชันสำหรับลบบทความ
-    public function delete($id)
+    public function edit(int $id)
+    {
+        $blog = Blog::findOrFail($id);
+        return view('edit', compact('blog'));
+    }
+
+    public function update(Request $request, int $id)
+    {
+        $request->validate([
+            'title'   => 'required|max:150',
+            'content' => 'required',
+        ], [
+            'title.required'   => 'กรุณาใส่ชื่อบทความ',
+            'title.max'        => 'ชื่อบทความต้องไม่เกิน 150 ตัวอักษร',
+            'content.required' => 'กรุณาใส่เนื้อหา',
+        ]);
+
+        $blog = Blog::findOrFail($id);
+        $blog->update([
+            'title'   => $request->input('title'),
+            'content' => $request->input('content'),
+        ]);
+
+        return redirect()->route('author.blog.manage')->with('success', 'แก้ไขบทความเรียบร้อยแล้ว');
+    }
+
+    public function delete(int $id)
     {
         $blog = Blog::findOrFail($id);
         $blog->delete();
@@ -60,17 +85,10 @@ class BlogController extends Controller
         return redirect()->back()->with('success', 'ลบบทความเรียบร้อยแล้ว');
     }
 
-    // ฟังก์ชันสลับสถานะบทความ (เผยแพร่ / ฉบับร่าง)
-    public function changeStatus($id)
+    public function changeStatus(int $id)
     {
         $blog = Blog::findOrFail($id);
-        
-        // สลับสถานะ (รองรับทั้ง boolean 1/0 หรือ string 'published'/'draft')
-        if ($blog->status == '1' || $blog->status === 'published' || $blog->status === true) {
-            $blog->status = is_numeric($blog->status) ? 0 : 'draft';
-        } else {
-            $blog->status = is_numeric($blog->status) ? 1 : 'published';
-        }
+        $blog->status = !$blog->status;
         $blog->save();
 
         return redirect()->back()->with('success', 'เปลี่ยนสถานะบทความเรียบร้อยแล้ว');
