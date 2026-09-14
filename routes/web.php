@@ -22,11 +22,12 @@ Route::get('/about', function () {
 })->name('about');
 
 Route::get('/blog', [BlogController::class, 'index'])->name('blog');
+Route::get('/blog/{id}', [BlogController::class, 'detail'])->name('blog.detail');
 Route::get('/blog2', [AdminController::class, 'blog2'])->name('blog2');
 Route::get('/from', [AdminController::class, 'create'])->name('from');
 Route::post('/insert', [AdminController::class, 'insert'])->name('insert');
 
-// Author prefix routes
+// Author prefix routes นักเขียนบทความ
 Route::prefix('author')->group(function () {
     Route::get('/blog2', [AdminController::class, 'blog2'])->name('author.blog2');
     Route::get('/create', [AdminController::class, 'create'])->name('author.create');

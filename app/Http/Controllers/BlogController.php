@@ -19,6 +19,13 @@ class BlogController extends Controller
         return view('blog', compact('blogs'));
     }
 
+    public function detail(int $id)
+    {
+        $blog = Blog::where('status', true)->findOrFail($id);
+
+        return view('detail', compact('blog'));
+    }
+
     // หน้าจัดการ (ต้อง login) — ทุกสถานะ
     public function manage()
     {

@@ -23,7 +23,7 @@ class AdminController extends Controller
                       ->orWhere('content', 'like', "%{$search}%");
                 });
             })
-            ->orderBy('id', 'asc')
+            ->orderBy('id', 'desc')
             ->paginate(5)
             ->withQueryString();
 
@@ -32,7 +32,7 @@ class AdminController extends Controller
 
     public function blog2(Request $request)
     {
-        $blog2 = DB::table('blogs')->orderBy('id', 'asc')->paginate(5);
+        $blog2 = DB::table('blogs')->orderBy('id', 'desc')->paginate(5);
         $blogs = $blog2;
         return view('blog2', compact('blog2', 'blogs'));
     }
@@ -50,12 +50,13 @@ class AdminController extends Controller
 
         $data = [
             'title' => $request->title,
-            'content' => $request->content
+            'content' => $request->content,
+            'status' => true,
         ];
 
         Blog::insert($data);
 
-        return redirect('/author/blog2');
+        return redirect('/')->with('success', 'บันทึกบทความและเผยแพร่เรียบร้อยแล้ว');
     }
 
     public function delete($id)

@@ -3,6 +3,23 @@
 @section('title', 'แก้ไขบทความ')
 
 @section('content')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-bs5.min.css">
+<style>
+    .note-editor.note-frame {
+        border: 1px solid #d8dee9;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .note-editor .note-editable {
+        min-height: 260px;
+        background: #ffffff;
+        color: #1f2937;
+        font-size: 0.95rem;
+        line-height: 1.7;
+    }
+</style>
+
 <div class="container page-container-md">
     
     <div class="d-flex align-items-center gap-3 mb-4">
@@ -56,9 +73,10 @@
                 <label class="form-label form-label-custom">เนื้อหาบทความ</label>
 
                 <textarea
+                    id="content"
                     name="content"
-                    rows="7"
-                    class="form-control custom-textarea @error('content') is-invalid @enderror"
+                    spellcheck="false"
+                    class="form-control @error('content') is-invalid @enderror"
                     placeholder="เริ่มเขียนเนื้อหารายละเอียดของบทความที่นี่...">{{ old('content', $blog->content) }}</textarea>
 
                 @error('content')
@@ -83,7 +101,55 @@
     </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-bs5.min.js"></script>
 <script>
+    $(function () {
+        $('#content').summernote({
+            height: 260,
+            placeholder: 'เริ่มเขียนเนื้อหารายละเอียดของบทความที่นี่...',
+            toolbar: [
+                ['style', ['style']],
+                ['font', ['bold', 'italic', 'underline', 'clear']],
+                ['fontname', ['fontname']],
+                ['color', ['color']],
+                ['para', ['ul', 'ol', 'paragraph']],
+                ['insert', ['link', 'picture', 'video']],
+                ['view', ['fullscreen', 'codeview', 'help']]
+            ],
+            callbacks: {
+                onPaste: function (event) {
+                    const clipboard = (event.originalEvent || event).clipboardData || window.clipboardData;
+                    const plainText = clipboard.getData('text/plain');
+                    const videoId = getYouTubeVideoId(plainText.trim());
+
+                    event.preventDefault();
+
+                    if (videoId) {
+                        const iframe = $('<iframe>', {
+                            src: 'https://www.youtube.com/embed/' + videoId,
+                            width: '560',
+                            height: '315',
+                            frameborder: '0',
+                            allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share',
+                            allowfullscreen: true
+                        })[0];
+
+                        $('#content').summernote('insertNode', iframe);
+                        return;
+                    }
+
+                    document.execCommand('insertText', false, plainText);
+                }
+            }
+        });
+    });
+
+    function getYouTubeVideoId(url) {
+        const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/);
+        return match ? match[1] : null;
+    }
+
     function checkTitleLength() {
         const input = document.getElementById('title');
         const counter = document.getElementById('titleCounter');

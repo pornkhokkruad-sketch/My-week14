@@ -1,19 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
+@extends('layouts.app')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>ยินดีต้อนรับ</title>
-</head>
+@section('title', 'หน้าแรกของเว็บไซต์')
 
-<body>
-    <h2>ยินดีต้อนรับ</h2>
-    <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Minus facilis quas nisi a ut ipsa officia rem officiis
-        possimus ex est et, expedita ad reprehenderit mollitia unde. Accusamus, minus perferendis.</p>
-    <a href="about">about</a>
-    <a href="blog">blog</a>
-</body>
+@section('content')
+    <h2>บทความล่าสุด</h2>
+    <hr>
 
-</html>
+    @forelse ($blogs as $item)
+        <h2>{{ $item->title }}</h2>
+        <p>{{ \Illuminate\Support\Str::limit(strip_tags($item->content), 100) }}</p>
+        <a href="{{ route('blog.detail', $item->id) }}">อ่านเพิ่มเติม</a>
+        <hr>
+    @empty
+        <p>ยังไม่มีบทความที่เผยแพร่</p>
+    @endforelse
+@endsection
